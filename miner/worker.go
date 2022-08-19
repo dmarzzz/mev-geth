@@ -1279,7 +1279,7 @@ func (w *worker) fillTransactions(interrupt *int32, env *environment) error {
 			log.Error("Failed to generate flashbots bundle", "err", err)
 			return err
 		}
-		log.Info("Flashbots bundle", "ethToCoinbase", ethIntToFloat(bundle.totalEth), "gasUsed", bundle.totalGasUsed, "bundleScore", bundle.mevGasPrice, "bundleLength", len(bundleTxs), "numBundles", numBundles, "worker", w.flashbots.maxMergedBundles)
+		log.Info("Final bundle", "ethToCoinbase", ethIntToFloat(bundle.totalEth), "gasUsed", bundle.totalGasUsed, "bundleScore", bundle.mevGasPrice, "bundleLength", len(bundleTxs), "numBundles", numBundles, "worker", w.flashbots.maxMergedBundles)
 		if len(bundleTxs) == 0 {
 			return errors.New("no bundles to apply")
 		}
@@ -1360,6 +1360,8 @@ func (w *worker) generateWork(params *generateParams) (*types.Block, error) {
 
 	coinbaseBalanceAfter := work.state.GetBalance(params.coinbase)
 	block.Profit = big.NewInt(0).Sub(coinbaseBalanceAfter, coinbaseBalanceBefore)
+	log.Info("generateWork", "block", block.Number(), "block.Profit", ethIntToFloat(block.Profit),
+	         "totalFees", totalFees(block, work.receipts), "gasUsed", block.GasUsed())
 	return block, nil
 }
 
@@ -1571,6 +1573,8 @@ func (w *worker) simulateBundles(env *environment, bundles []types.MevBundle, pe
 			log.Debug("Error computing gas for a bundle", "error", err)
 			continue
 		}
+		log.Info("Top simmed bundle", "ethToCoinbase", ethIntToFloat(simmed.totalEth), "gasUsed", simmed.totalGasUsed, "bundleScore", simmed.mevGasPrice, "bundleLength", len(simmed.originalBundle.Txs), "worker", w.flashbots.maxMergedBundles)
+
 		simulatedBundles = append(simulatedBundles, simmed)
 	}
 
